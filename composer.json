@@ -6,5 +6,8 @@
             "email": "bathulaavi@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+      "ext-json": "*",
+      "ext-pdo": "*"
+    }
 }

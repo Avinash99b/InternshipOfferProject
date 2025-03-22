@@ -1,18 +1,18 @@
 <?php
 
-require_once __DIR__.'/../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 $database = new Database();
 $conn = $database->getConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 $request_uri = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
 
-$empId = $request_uri[sizeof($request_uri)-1];
+$empId = $request_uri[sizeof($request_uri) - 1];
 
-if(intval($empId)===0){
+if (intval($empId) === 0) {
     $id = null;
-}else{
-    $id=intval($empId);
+} else {
+    $id = intval($empId);
 }
 
 
@@ -60,9 +60,27 @@ if ($method === 'POST') {
         exit;
     }
 
+    if (empty($data['name']) || empty($data['department_id']) || empty($data['position_id'])) {
+        http_response_code(400);
+        echo json_encode(["message" => "Missing required fields"]);
+        exit;
+    }
+
+    //check if name is greater than 3 characters
+    if (strlen($data['name']) < 3) {
+        http_response_code(400);
+        echo json_encode(["message" => "Name should be greater than 3 characters"]);
+        exit;
+    }
+
     $stmt = $conn->prepare("INSERT INTO employees (name, department_id, position_id) VALUES (?, ?, ?)");
-    $stmt->execute([$data['name'], $data['department_id'], $data['position_id']]);
-    echo json_encode(["message" => "Employee added successfully"]);
+    if ($stmt->execute([$data['name'], $data['department_id'], $data['position_id']])) {
+
+        echo json_encode(["message" => "Employee added successfully"]);
+    } else {
+        http_response_code(500);
+        echo json_encode([ "message" => "Failed to add employee"]);
+    }
     exit;
 }
 
@@ -71,7 +89,12 @@ if ($method === 'PUT' && $id) {
     $data = json_decode(file_get_contents("php://input"), true);
 
     $stmt = $conn->prepare("UPDATE employees SET name = ?, department_id = ?, position_id = ? WHERE id = ?");
-    $stmt->execute([$data['name'], $data['department_id'], $data['position_id'], $id]);
+    if(!$stmt->execute([$data['name'], $data['department_id'], $data['position_id'], $id])){
+        http_response_code(500);
+        echo json_encode(["message" => "Failed to update employee"]);
+        exit;
+    }
+
     echo json_encode(["message" => "Employee updated successfully"]);
     exit;
 }

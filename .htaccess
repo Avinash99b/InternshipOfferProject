@@ -1,2 +1,49 @@
+# Enable mod_rewrite for URL rewriting
 RewriteEngine On
+
+# Rewrite the request to index.php for all URLs (if needed)
 RewriteRule ^ index.php [L]
+
+# Handle CORS preflight requests
+<IfModule mod_headers.c>
+    # Allow cross-origin requests from the specific origin (your frontend domain)
+    Header set Access-Control-Allow-Origin "https://interntestgui.drophere.xyz"
+    
+    # Allow the required methods for your requests
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
+    
+    # Allow the necessary headers (including those sent in the request)
+    Header set Access-Control-Allow-Headers "Content-Type, X-Requested-With, Authorization"
+    
+    # Allow credentials if needed (cookies, sessions)
+    Header set Access-Control-Allow-Credentials "true"
+    
+    # Handle OPTIONS preflight requests
+    <FilesMatch "^OPTIONS$">
+        Header set Access-Control-Allow-Origin "https://interntestgui.drophere.xyz"
+        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
+        Header set Access-Control-Allow-Headers "Content-Type, X-Requested-With, Authorization"
+        Header set Access-Control-Max-Age "1728000"  # Cache preflight response for 20 days
+        Header always set HTTP/1.1 200
+    </FilesMatch>
+</IfModule>
+
+# Allow OPTIONS method globally
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule .* - [R=200,L]
+</IfModule>
+
+# Additional configuration for handling CORS in non-OPTIONS requests
+<IfModule mod_headers.c>
+    # Set headers for all other requests
+    Header always set Access-Control-Allow-Origin "https://interntestgui.drophere.xyz"
+    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
+    Header always set Access-Control-Allow-Headers "Content-Type, X-Requested-With, Authorization"
+    Header always set Access-Control-Allow-Credentials "true"
+</IfModule>
+
+# Optionally, configure cache control for CORS headers (optional, depending on your requirements)
+<IfModule mod_headers.c>
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate"
+</IfModule>
