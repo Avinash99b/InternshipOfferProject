@@ -8,8 +8,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
+//Check if the user is logged in
+session_start();
+
 $request_uri = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
 $resource = $request_uri[1] ?? '';
+
+if($resource === 'users'){
+    require_once './api/users.php';
+    exit();
+}
+
+
+foreach (apache_request_headers() as $header => $value) {
+    if($header === 'Authorization'){
+        $token = $value;
+    }
+}
+if(!isset($token)){
+    http_response_code(401);
+    echo json_encode(["message" => "Unauthorized, token not found"]);
+    exit();
+}
+
+if(!file_exists("token.txt")) {
+    http_response_code(401);
+    echo json_encode(["message" => "Unauthorized"]);
+    exit();
+}
+$actual_token = file_get_contents("token.txt");
+if($actual_token !== $token){
+    http_response_code(401);
+    echo json_encode(["message" => "Unauthorized"]);
+    exit();
+}
 
 switch ($resource) {
     case 'employees':
